@@ -84,6 +84,8 @@ namespace DMagic
         [KSPField]
         public bool asteroidReports = false;
         [KSPField]
+        public bool asteroidTypeDependent = false;
+        [KSPField]
         public bool USStock = false;
         [KSPField]
         public bool primary = true;
@@ -96,10 +98,11 @@ namespace DMagic
         private List<DMModuleScienceAnimate> primaryList = new List<DMModuleScienceAnimate>();
         private DMModuleScienceAnimate primaryModule = null;
         private CelestialBody mainBody = null;
+        private AsteroidScience newAsteroid = null;
 
         //Record some default values for Eeloo here to prevent the asteroid science method from screwing them up
-        private const string bodyDescription = "There’s been a considerable amount of controversy around the status of Eeloo as being a proper planet or a just “lump of ice going around the Sun”. The debate is still ongoing, since most academic summits held to address the issue have devolved into, on good days, petty name calling, and on worse ones, all-out brawls.";
-        private const string bodyName = "Eeloo";
+        //private const string bodyDescription = "There’s been a considerable amount of controversy around the status of Eeloo as being a proper planet or a just “lump of ice going around the Sun”. The debate is still ongoing, since most academic summits held to address the issue have devolved into, on good days, petty name calling, and on worse ones, all-out brawls.";
+        private const string bodyNameConst = "Eeloo";
         private const float bodyLandedValue = 15;
         private const float bodySpaceValue = 12;
         
@@ -117,10 +120,10 @@ namespace DMagic
                 if (FlightGlobals.fetch.bodies[16].bodyName != "Eeloo") //Just to make sure nothing gets permanently screwed up
                 {
                     mainBody = FlightGlobals.Bodies[16];
-                    mainBody.bodyDescription = bodyDescription;
-                    mainBody.bodyName = bodyName;
-                    mainBody.scienceValues.LandedDataValue = bodyLandedValue;
-                    mainBody.scienceValues.InSpaceLowDataValue = bodySpaceValue;
+                    //mainBody.bodyDescription = bodyDescription;
+                    mainBody.bodyName = bodyNameConst;
+                    //mainBody.scienceValues.LandedDataValue = bodyLandedValue;
+                    //mainBody.scienceValues.InSpaceLowDataValue = bodySpaceValue;
                 }
                 if (IsDeployed) primaryAnimator(1f, 1f, WrapMode.Default);
             }
@@ -483,27 +486,33 @@ namespace DMagic
             //Check for asteroids and alter the biome and celestialbody values as necessary
             if (asteroidReports && AsteroidScience.asteroidGrappled() || asteroidReports && AsteroidScience.asteroidNear())
             {
+                newAsteroid = new AsteroidScience();
                 asteroid = true;
-                mainBody = AsteroidScience.Asteroid();
-                biome = mainBody.bodyDescription;
+                mainBody = newAsteroid.AsteroidBody;
+                biome = "_" + newAsteroid.aSeed;
+                if (asteroidTypeDependent) biome = newAsteroid.aType + "_" + newAsteroid.aSeed;
             }
 
             ScienceData data = null;
             ScienceExperiment exp = ResearchAndDevelopment.GetExperiment(experimentID);
             ScienceSubject sub = ResearchAndDevelopment.GetExperimentSubject(exp, vesselSituation, mainBody, biome);
+            print("Experiment: Base: " + exp.baseValue.ToString() + " Cap: " + exp.scienceCap.ToString());
+            print("Subject: Sci: " + sub.science.ToString() + " Cap: " + sub.scienceCap.ToString() + " SciV: " + sub.scientificValue.ToString() + " SubV: " + sub.subjectValue.ToString());
 
             //Replace Eeloo's CelestialBody values with defaults if necessary
             if (asteroid)
             {
-                mainBody.bodyDescription = bodyDescription;
-                mainBody.bodyName = bodyName;
-                mainBody.scienceValues.LandedDataValue = bodyLandedValue;
-                mainBody.scienceValues.InSpaceLowDataValue = bodySpaceValue;
+                sub.scienceCap /= sub.subjectValue * 50f;
+                sub.subjectValue /= sub.subjectValue * newAsteroid.sciMult;
+                sub.science = 1f;
+                sub.scientificValue = 1f;
+                mainBody.bodyName = bodyNameConst;
                 asteroid = false;
             }
 
             data = new ScienceData(exp.baseValue * sub.dataScale, xmitDataScalar, xmitDataScalar / 2, experimentID, exp.experimentTitle + situationCleanup(vesselSituation, biome));
             data.subjectID = sub.id;
+            print("Data: Transmission: " + data.transmitValue.ToString());
             sub.title = data.title;
             return data;
         }
