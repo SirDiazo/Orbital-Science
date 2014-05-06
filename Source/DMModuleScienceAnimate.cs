@@ -102,9 +102,9 @@ namespace DMagic
 
         //Record some default values for Eeloo here to prevent the asteroid science method from screwing them up
         //private const string bodyDescription = "There’s been a considerable amount of controversy around the status of Eeloo as being a proper planet or a just “lump of ice going around the Sun”. The debate is still ongoing, since most academic summits held to address the issue have devolved into, on good days, petty name calling, and on worse ones, all-out brawls.";
-        private const string bodyNameConst = "Eeloo";
-        private const float bodyLandedValue = 15;
-        private const float bodySpaceValue = 12;
+        //private const string bodyNameConst = "Eeloo";
+        //private const float bodyLandedValue = 15;
+        //private const float bodySpaceValue = 12;
         
         List<ScienceData> scienceReportList = new List<ScienceData>();
 
@@ -117,14 +117,14 @@ namespace DMagic
             else
             {
                 setup();
-                if (FlightGlobals.fetch.bodies[16].bodyName != "Eeloo") //Just to make sure nothing gets permanently screwed up
-                {
-                    mainBody = FlightGlobals.Bodies[16];
-                    //mainBody.bodyDescription = bodyDescription;
-                    mainBody.bodyName = bodyNameConst;
-                    //mainBody.scienceValues.LandedDataValue = bodyLandedValue;
-                    //mainBody.scienceValues.InSpaceLowDataValue = bodySpaceValue;
-                }
+                //if (FlightGlobals.fetch.bodies[16].bodyName != "Eeloo") //Just to make sure nothing gets permanently screwed up
+                //{
+                //    mainBody = FlightGlobals.Bodies[16];
+                //    //mainBody.bodyDescription = bodyDescription;
+                //    mainBody.bodyName = bodyNameConst;
+                //    //mainBody.scienceValues.LandedDataValue = bodyLandedValue;
+                //    //mainBody.scienceValues.InSpaceLowDataValue = bodySpaceValue;
+                //}
                 if (IsDeployed) primaryAnimator(1f, 1f, WrapMode.Default);
             }
         }
@@ -488,7 +488,7 @@ namespace DMagic
             {
                 newAsteroid = new AsteroidScience();
                 asteroid = true;
-                mainBody = newAsteroid.AsteroidBody;
+                //mainBody = newAsteroid.AsteroidBody;
                 biome = "_" + newAsteroid.aSeed;
                 if (asteroidTypeDependent) biome = newAsteroid.aType + "_" + newAsteroid.aSeed;
             }
@@ -506,7 +506,8 @@ namespace DMagic
                 sub.subjectValue /= sub.subjectValue * newAsteroid.sciMult;
                 sub.science = 1f;
                 sub.scientificValue = 1f;
-                mainBody.bodyName = bodyNameConst;
+                DMScienceScenario.SciScenario.RecordNewScience(sub.id, sub.title, exp.dataScale, sub.scientificValue, sub.subjectValue, sub.science, sub.scienceCap);
+                //mainBody.bodyName = bodyNameConst;
                 asteroid = false;
             }
 
