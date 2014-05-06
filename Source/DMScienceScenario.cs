@@ -53,7 +53,7 @@ namespace DMagic
             set {}
         }
 
-        private List<DMScienceData> recoveredScienceList = new List<DMScienceData>();
+        internal static List<DMScienceData> recoveredScienceList = new List<DMScienceData>();
 
         public override void OnSave(ConfigNode node)
         {
@@ -69,6 +69,7 @@ namespace DMagic
                 scienceResults_node.AddValue("sbv", data.subval);
                 scienceResults_node.AddValue("sci", data.science);
                 scienceResults_node.AddValue("cap", data.cap);
+                scienceResults_node.AddValue("expNo", data.expNo);
                 
             }
         }
@@ -88,7 +89,8 @@ namespace DMagic
                     float sbv = Convert.ToSingle(scienceResults_node.GetValue("sbv"));
                     float sci = Convert.ToSingle(scienceResults_node.GetValue("sci"));
                     float cap = Convert.ToSingle(scienceResults_node.GetValue("cap"));
-                    RecordNewScience(id, title, dsc, scv, sbv, sci, cap);
+                    int eNo = Convert.ToInt32(scienceResults_node.GetValue("expNo"));
+                    RecordNewScience(id, title, dsc, scv, sbv, sci, cap, eNo);
                 }
             }
         }
@@ -96,10 +98,11 @@ namespace DMagic
         internal class DMScienceData
         {
             internal string id, title;
+            internal int expNo;
             internal float dataScale, scival, subval, science, cap;
         }
 
-        internal void RecordNewScience(string id, string title, float dsc, float scv, float sbv, float sci, float cap)
+        internal void RecordNewScience(string id, string title, float dsc, float scv, float sbv, float sci, float cap, int eNo)
         {
             DMScienceData DMData = new DMScienceData();
             DMData.id = id;
@@ -109,7 +112,22 @@ namespace DMagic
             DMData.subval = sbv;
             DMData.science = sci;
             DMData.cap = cap;
+            DMData.expNo = eNo;
             recoveredScienceList.Add(DMData);
+        }
+
+        internal void AppendNewScience(string id, float scv, float sci, int eNo)
+        {
+            foreach (DMScienceData DMData in recoveredScienceList)
+            {
+                if (DMData.id == id)
+                {
+                    DMData.scival = scv;
+                    DMData.science = sci;
+                    DMData.expNo = eNo;
+                    break;
+                }
+            }
         }
 
         internal void RemoveDMScience(DMScienceData DMdata)
