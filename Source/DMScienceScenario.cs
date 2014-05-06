@@ -39,6 +39,20 @@ namespace DMagic
     public class DMScienceScenario: ScenarioModule
     {
 
+        public static DMScienceScenario SciScenario
+        {
+            get
+            {
+                Game g = HighLogic.CurrentGame;
+                foreach (ProtoScenarioModule pMod in g.scenarios)
+                {
+                    if (pMod.moduleName == typeof(DMScienceScenario).Name) return (DMScienceScenario)pMod.moduleRef;
+                }
+                return (DMScienceScenario)g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.FLIGHT).moduleRef;
+            }
+            set {}
+        }
+
         private List<DMScienceData> recoveredScienceList = new List<DMScienceData>();
 
         public override void OnSave(ConfigNode node)
@@ -50,11 +64,12 @@ namespace DMagic
                 ConfigNode scienceResults_node = new ConfigNode("Science");
                 scienceResults_node.AddValue("id", data.id);
                 scienceResults_node.AddValue("title", data.title);
-                scienceResults_node.AddValue("dsc", data.dsc);
-                scienceResults_node.AddValue("scv", data.scv);
-                scienceResults_node.AddValue("sbv", data.sbv);
-                scienceResults_node.AddValue("sci", data.sci);
+                scienceResults_node.AddValue("dsc", data.dataScale);
+                scienceResults_node.AddValue("scv", data.scival);
+                scienceResults_node.AddValue("sbv", data.subval);
+                scienceResults_node.AddValue("sci", data.science);
                 scienceResults_node.AddValue("cap", data.cap);
+                
             }
         }
 
@@ -68,11 +83,11 @@ namespace DMagic
                 {
                     string id = scienceResults_node.GetValue("id");
                     string title = scienceResults_node.GetValue("title");
-                    double dsc = Convert.ToDouble(scienceResults_node.GetValue("dsc"));
-                    double scv = Convert.ToDouble(scienceResults_node.GetValue("scv"));
-                    double sbv = Convert.ToDouble(scienceResults_node.GetValue("sbv"));
-                    double sci = Convert.ToDouble(scienceResults_node.GetValue("sci"));
-                    double cap = Convert.ToDouble(scienceResults_node.GetValue("cap"));
+                    float dsc = Convert.ToSingle(scienceResults_node.GetValue("dsc"));
+                    float scv = Convert.ToSingle(scienceResults_node.GetValue("scv"));
+                    float sbv = Convert.ToSingle(scienceResults_node.GetValue("sbv"));
+                    float sci = Convert.ToSingle(scienceResults_node.GetValue("sci"));
+                    float cap = Convert.ToSingle(scienceResults_node.GetValue("cap"));
                     RecordNewScience(id, title, dsc, scv, sbv, sci, cap);
                 }
             }
@@ -81,18 +96,18 @@ namespace DMagic
         internal class DMScienceData
         {
             internal string id, title;
-            internal double dsc, scv, sbv, sci, cap;
+            internal float dataScale, scival, subval, science, cap;
         }
 
-        internal void RecordNewScience(string id, string title, double dsc, double scv, double sbv, double sci, double cap)
+        internal void RecordNewScience(string id, string title, float dsc, float scv, float sbv, float sci, float cap)
         {
             DMScienceData DMData = new DMScienceData();
             DMData.id = id;
             DMData.title = title;
-            DMData.dsc = dsc;
-            DMData.scv = scv;
-            DMData.sbv = sbv;
-            DMData.sci = sci;
+            DMData.dataScale = dsc;
+            DMData.scival = scv;
+            DMData.subval = sbv;
+            DMData.science = sci;
             DMData.cap = cap;
             recoveredScienceList.Add(DMData);
         }
