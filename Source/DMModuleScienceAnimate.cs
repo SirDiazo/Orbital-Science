@@ -489,8 +489,8 @@ namespace DMagic
                 newAsteroid = new AsteroidScience();
                 asteroid = true;
                 //mainBody = newAsteroid.AsteroidBody;
-                biome = "_" + newAsteroid.aSeed;
-                if (asteroidTypeDependent) biome = newAsteroid.aType + "_" + newAsteroid.aSeed;
+                biome = ""; // +newAsteroid.aSeed;
+                if (asteroidTypeDependent) biome = newAsteroid.aType; // +"_" + newAsteroid.aSeed;
             }
 
             ScienceData data = null;
@@ -498,16 +498,10 @@ namespace DMagic
             ScienceSubject sub = ResearchAndDevelopment.GetExperimentSubject(exp, vesselSituation, mainBody, biome);
             print("Experiment: Base: " + exp.baseValue.ToString() + " Cap: " + exp.scienceCap.ToString());
             print("Subject: Sci: " + sub.science.ToString() + " Cap: " + sub.scienceCap.ToString() + " SciV: " + sub.scientificValue.ToString() + " SubV: " + sub.subjectValue.ToString());
-
-            //Replace Eeloo's CelestialBody values with defaults if necessary
+            
             if (asteroid)
             {
-                sub.scienceCap /= sub.subjectValue * 50f;
-                sub.subjectValue /= sub.subjectValue * newAsteroid.sciMult;
-                sub.science = 1f;
-                sub.scientificValue = 1f;
-                DMScienceScenario.SciScenario.RecordNewScience(sub.id, sub.title, exp.dataScale, sub.scientificValue, sub.subjectValue, sub.science, sub.scienceCap);
-                //mainBody.bodyName = bodyNameConst;
+                registerDMScience(newAsteroid, exp, sub, vesselSituation, biome);
                 asteroid = false;
             }
 
@@ -516,6 +510,35 @@ namespace DMagic
             print("Data: Transmission: " + data.transmitValue.ToString());
             sub.title = data.title;
             return data;
+        }
+
+        private void registerDMScience(AsteroidScience newAst, ScienceExperiment exp, ScienceSubject sub, ExperimentSituations expsit, string biome)
+        {
+            string astID = exp.experimentTitle + "@" + "Asteroid" + expsit.ToString() + biome;
+            float sciCap = exp.scienceCap * 50f;
+            float astScience = 0f;
+            float astSciVal = 1f;
+            int expNo = 0;
+            bool DMdataExists = false;
+
+            foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
+            {
+                if (DMData.id == astID)
+                {
+                    astScience = DMData.science;
+                    sub.scientificValue = DMData.scival;
+                    expNo = DMData.expNo;
+                    DMdataExists = true;
+                    break;
+                }
+            }
+            float remainingSci = sciCap - astScience;
+            sub.scientificValue = 1f;
+            sub.subjectValue /= sub.subjectValue * newAst.sciMult;
+            sub.science = exp.baseValue * sub.subjectValue * sub.scientificValue;
+            sub.scienceCap = exp.scienceCap * sub.subjectValue;
+            if (!DMdataExists) DMScienceScenario.SciScenario.RecordNewScience(astID, sub.title, exp.dataScale, astSciVal, sub.subjectValue, astScience, sciCap, expNo);
+            else DMScienceScenario.SciScenario.AppendNewScience(astID, astSciVal, astScience, expNo);
         }
         
         private string getBiome(ExperimentSituations s)
