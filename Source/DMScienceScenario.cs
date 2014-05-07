@@ -63,6 +63,7 @@ namespace DMagic
                 ConfigNode scienceResults_node = new ConfigNode("Science");
                 scienceResults_node.AddValue("id", data.id);
                 scienceResults_node.AddValue("title", data.title);
+                scienceResults_node.AddValue("bsv", data.basevalue);
                 scienceResults_node.AddValue("dsc", data.dataScale);
                 scienceResults_node.AddValue("scv", data.scival);
                 scienceResults_node.AddValue("sbv", data.subval);
@@ -84,13 +85,14 @@ namespace DMagic
                 {
                     string id = scienceResults_node.GetValue("id");
                     string title = scienceResults_node.GetValue("title");
+                    float bsv = Convert.ToSingle(scienceResults_node.GetValue("bsv"));
                     float dsc = Convert.ToSingle(scienceResults_node.GetValue("dsc"));
                     float scv = Convert.ToSingle(scienceResults_node.GetValue("scv"));
                     float sbv = Convert.ToSingle(scienceResults_node.GetValue("sbv"));
                     float sci = Convert.ToSingle(scienceResults_node.GetValue("sci"));
                     float cap = Convert.ToSingle(scienceResults_node.GetValue("cap"));
                     int eNo = Convert.ToInt32(scienceResults_node.GetValue("expNo"));
-                    RecordNewScience(id, title, dsc, scv, sbv, sci, cap, eNo);
+                    RecordNewScience(id, title, bsv, dsc, scv, sbv, sci, cap, eNo);
                 }
             }
         }
@@ -99,14 +101,15 @@ namespace DMagic
         {
             internal string id, title;
             internal int expNo;
-            internal float dataScale, scival, subval, science, cap;
+            internal float dataScale, scival, subval, science, cap, basevalue;
         }
 
-        internal void RecordNewScience(string id, string title, float dsc, float scv, float sbv, float sci, float cap, int eNo)
+        internal DMScienceData RecordNewScience(string id, string title, float baseval, float dsc, float scv, float sbv, float sci, float cap, int eNo)
         {
             DMScienceData DMData = new DMScienceData();
             DMData.id = id;
             DMData.title = title;
+            DMData.basevalue = baseval;
             DMData.dataScale = dsc;
             DMData.scival = scv;
             DMData.subval = sbv;
@@ -115,20 +118,19 @@ namespace DMagic
             DMData.expNo = eNo;
             recoveredScienceList.Add(DMData);
             print("Adding new DMData to list");
+            return DMData;
         }
 
-        internal void AppendNewScience(string id, float scv, float sci, int eNo)
+        internal DMScienceData UpdateNewScience(string id)
         {
             foreach (DMScienceData DMData in recoveredScienceList)
             {
                 if (DMData.id == id)
                 {
-                    DMData.scival = scv;
-                    DMData.science = sci;
-                    DMData.expNo = eNo;
-                    break;
+                    return DMData;
                 }
             }
+            return null;
         }
 
         internal void RemoveDMScience(DMScienceData DMdata)

@@ -60,6 +60,8 @@
     </Compile>
     <Compile Include="DMModuleScienceAnimate.cs" />
     <Compile Include="DMScienceScenario.cs" />
+    <Compile Include="DMScienceWatcher.cs" />
+    <Compile Include="KSPAddonFixed.cs" />
     <Compile Include="MagVar.cs">
       <SubType>Code</SubType>
     </Compile>

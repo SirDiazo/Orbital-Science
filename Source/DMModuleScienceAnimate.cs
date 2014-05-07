@@ -97,9 +97,9 @@ namespace DMagic
         private List<DMEnviroSensor> enviroList = new List<DMEnviroSensor>();
         private List<DMModuleScienceAnimate> primaryList = new List<DMModuleScienceAnimate>();
         private DMModuleScienceAnimate primaryModule = null;
-        private CelestialBody mainBody = null;
         private AsteroidScience newAsteroid = null;
         protected DMScienceScenario Scenario = DMScienceScenario.SciScenario;
+        private List<DMScienceScenario.DMScienceData> DMDataList = new List<DMScienceScenario.DMScienceData>();
 
         //Record some default values for Eeloo here to prevent the asteroid science method from screwing them up
         //private const string bodyDescription = "There’s been a considerable amount of controversy around the status of Eeloo as being a proper planet or a just “lump of ice going around the Sun”. The debate is still ongoing, since most academic summits held to address the issue have devolved into, on good days, petty name calling, and on worse ones, all-out brawls.";
@@ -482,7 +482,7 @@ namespace DMagic
         {
             ExperimentSituations vesselSituation = getSituation();
             string biome = getBiome(vesselSituation);
-            mainBody = vessel.mainBody;
+            CelestialBody mainBody = vessel.mainBody;
             bool asteroid = false;            
             
             //Check for asteroids and alter the biome and celestialbody values as necessary
@@ -521,21 +521,23 @@ namespace DMagic
 
         private void registerDMScience(AsteroidScience newAst, ScienceExperiment exp, ScienceSubject sub, ExperimentSituations expsit, string biome)
         {
+            DMScienceScenario.DMScienceData DMData = new DMScienceScenario.DMScienceData();
+            DMDataList.Clear();
             string astID = exp.id + "@Asteroid" + expsit.ToString() + biome;
-            float sciCap = exp.scienceCap * 50f;
+            float sciCap = exp.scienceCap * 43.5f;
             float astScience = 0f;
             float astSciVal = 1f;
             int expNo = 0;
             bool DMdataExists = false;
 
-            foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
+            foreach (DMScienceScenario.DMScienceData DMScience in DMScienceScenario.recoveredScienceList)
             {
                 print("Checking for DM Data in list length: " + DMScienceScenario.recoveredScienceList.Count.ToString());
-                if (DMData.id == astID)
+                if (DMScience.id == astID)
                 {
-                    astScience = DMData.science;
-                    sub.scientificValue = DMData.scival;
-                    expNo = DMData.expNo;
+                    astScience = DMScience.science;
+                    sub.scientificValue = DMScience.scival;
+                    expNo = DMScience.expNo;
                     DMdataExists = true;
                     print("found matching DM Data");
                     break;
@@ -546,8 +548,34 @@ namespace DMagic
             sub.subjectValue = (sub.subjectValue / sub.subjectValue) * newAst.sciMult;
             sub.science = astScience;
             sub.scienceCap = exp.scienceCap * sub.subjectValue;
-            if (!DMdataExists) DMScienceScenario.SciScenario.RecordNewScience(astID, sub.title, exp.dataScale, astSciVal, sub.subjectValue, astScience, sciCap, expNo);
-            else DMScienceScenario.SciScenario.AppendNewScience(astID, astSciVal, astScience, expNo);
+            if (!DMdataExists) 
+            {
+                DMData = DMScienceScenario.SciScenario.RecordNewScience(astID, sub.title, exp.baseValue, exp.dataScale, astSciVal, sub.subjectValue, astScience, sciCap, expNo);
+                DMDataList.Add(DMData);
+            }           
+            else 
+            {
+                DMData = DMScienceScenario.SciScenario.UpdateNewScience(astID);
+                DMDataList.Add(DMData);
+            }
+        }
+        
+        internal static void submitDMScience(DMScienceScenario.DMScienceData DMData, ScienceSubject sub)
+        {
+            if (DMData.expNo < 3) DMData.scival -= 0.05f * (6 / DMData.expNo);
+            else DMData.scival -= 0.05f;
+            //float scv = DMData.scival - DMData.scival * (0.5f / DMData.expNo);
+            DMData.science += DMData.basevalue * sub.subjectValue * DMData.scival;
+            //float sci = DMData.science + DMData.basevalue * sub.subjectValue * scv;
+            DMData.expNo++;
+            //int expNo = DMData.expNo + 1;
+            foreach (DMScienceScenario.DMScienceData DMScience in DMScienceScenario.recoveredScienceList)
+            {
+                if (DMScience.id == DMData.id)
+                {
+                    DMScienceScenario.SciScenario.UpdateNewScience(DMData.id);
+                }
+            }
         }
         
         private string getBiome(ExperimentSituations s)
@@ -728,6 +756,15 @@ namespace DMagic
                 base.DumpData(data);
                 if (keepDeployedMode == 0) retractEvent();
                 scienceReportList.Clear();
+                if (DMDataList.Count > 0)
+                {
+                    if (data.subjectID == DMDataList[0].id) 
+                    {
+                        ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
+                        submitDMScience(DMDataList[0], sub);
+                        DMDataList.Clear();
+                    }
+                }
                 //print("Dump Data");
             }
             eventsCheck();
@@ -757,6 +794,15 @@ namespace DMagic
                 base.DumpData(data);
                 if (keepDeployedMode == 0) retractEvent();
                 scienceReportList.Remove(data);
+                if (DMDataList.Count > 0)
+                {
+                    if (data.subjectID == DMDataList[0].id)
+                    {
+                        ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
+                        submitDMScience(DMDataList[0], sub);
+                        DMDataList.Clear();
+                    }
+                }
                 //print("Dump Data Local");
             }
             eventsCheck();
