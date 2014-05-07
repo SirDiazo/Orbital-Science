@@ -58,7 +58,6 @@ namespace DMagic
         public override void OnSave(ConfigNode node)
         {
             ConfigNode results_node = new ConfigNode("Asteroid Science");
-            results_node.ClearNodes();
             foreach (DMScienceData data in recoveredScienceList)
             {
                 ConfigNode scienceResults_node = new ConfigNode("Science");
@@ -70,8 +69,9 @@ namespace DMagic
                 scienceResults_node.AddValue("sci", data.science);
                 scienceResults_node.AddValue("cap", data.cap);
                 scienceResults_node.AddValue("expNo", data.expNo);
-                
+                results_node.AddNode(scienceResults_node);
             }
+            node.AddNode(results_node);
         }
 
         public override void OnLoad(ConfigNode node)
@@ -114,6 +114,7 @@ namespace DMagic
             DMData.cap = cap;
             DMData.expNo = eNo;
             recoveredScienceList.Add(DMData);
+            print("Adding new DMData to list");
         }
 
         internal void AppendNewScience(string id, float scv, float sci, int eNo)
