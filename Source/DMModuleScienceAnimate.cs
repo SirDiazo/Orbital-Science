@@ -99,6 +99,7 @@ namespace DMagic
         private DMModuleScienceAnimate primaryModule = null;
         private CelestialBody mainBody = null;
         private AsteroidScience newAsteroid = null;
+        protected DMScienceScenario Scenario = DMScienceScenario.SciScenario;
 
         //Record some default values for Eeloo here to prevent the asteroid science method from screwing them up
         //private const string bodyDescription = "There’s been a considerable amount of controversy around the status of Eeloo as being a proper planet or a just “lump of ice going around the Sun”. The debate is still ongoing, since most academic summits held to address the issue have devolved into, on good days, petty name calling, and on worse ones, all-out brawls.";
@@ -203,6 +204,7 @@ namespace DMagic
                 foreach (DMModuleScienceAnimate DMS in primaryList)
                 {
                     if (DMS.primary) primaryModule = DMS;
+                    break;
                 }
             }
             if (USStock) enviroList = this.part.FindModulesImplementing<DMEnviroSensor>();
@@ -497,7 +499,10 @@ namespace DMagic
             ScienceExperiment exp = ResearchAndDevelopment.GetExperiment(experimentID);
             ScienceSubject sub = ResearchAndDevelopment.GetExperimentSubject(exp, vesselSituation, mainBody, biome);
             print("Experiment: Base: " + exp.baseValue.ToString() + " Cap: " + exp.scienceCap.ToString());
+            print("Experiment: ID: " + exp.id + " Title: " + exp.experimentTitle);
             print("Subject: Sci: " + sub.science.ToString() + " Cap: " + sub.scienceCap.ToString() + " SciV: " + sub.scientificValue.ToString() + " SubV: " + sub.subjectValue.ToString());
+            print("Subject: Title: " + sub.title + " ID: " + sub.id);
+            sub.title = exp.experimentTitle + situationCleanup(vesselSituation, biome);
             
             if (asteroid)
             {
@@ -505,16 +510,18 @@ namespace DMagic
                 asteroid = false;
             }
 
-            data = new ScienceData(exp.baseValue * sub.dataScale, xmitDataScalar, xmitDataScalar / 2, experimentID, exp.experimentTitle + situationCleanup(vesselSituation, biome));
-            data.subjectID = sub.id;
+            data = new ScienceData(exp.baseValue * sub.dataScale, xmitDataScalar, xmitDataScalar / 2, sub.id, sub.title);
+            print("Data: ID Old: " + data.subjectID);
+            //data.subjectID = sub.id;
             print("Data: Transmission: " + data.transmitValue.ToString());
-            sub.title = data.title;
+            print("Data: Title: " + data.title + " ID: " + data.subjectID);
+            //sub.title = data.title;
             return data;
         }
 
         private void registerDMScience(AsteroidScience newAst, ScienceExperiment exp, ScienceSubject sub, ExperimentSituations expsit, string biome)
         {
-            string astID = exp.experimentTitle + "@" + "Asteroid" + expsit.ToString() + biome;
+            string astID = exp.id + "@Asteroid" + expsit.ToString() + biome;
             float sciCap = exp.scienceCap * 50f;
             float astScience = 0f;
             float astSciVal = 1f;
@@ -523,19 +530,21 @@ namespace DMagic
 
             foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
             {
+                print("Checking for DM Data in list length: " + DMScienceScenario.recoveredScienceList.Count.ToString());
                 if (DMData.id == astID)
                 {
                     astScience = DMData.science;
                     sub.scientificValue = DMData.scival;
                     expNo = DMData.expNo;
                     DMdataExists = true;
+                    print("found matching DM Data");
                     break;
                 }
             }
             float remainingSci = sciCap - astScience;
             sub.scientificValue = 1f;
-            sub.subjectValue /= sub.subjectValue * newAst.sciMult;
-            sub.science = exp.baseValue * sub.subjectValue * sub.scientificValue;
+            sub.subjectValue = (sub.subjectValue / sub.subjectValue) * newAst.sciMult;
+            sub.science = astScience;
             sub.scienceCap = exp.scienceCap * sub.subjectValue;
             if (!DMdataExists) DMScienceScenario.SciScenario.RecordNewScience(astID, sub.title, exp.dataScale, astSciVal, sub.subjectValue, astScience, sciCap, expNo);
             else DMScienceScenario.SciScenario.AppendNewScience(astID, astSciVal, astScience, expNo);
