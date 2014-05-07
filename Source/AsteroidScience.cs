@@ -59,7 +59,7 @@ namespace DMagic
             if (asteroidNear())
             {
                 ModuleAsteroid asteroidM = asteroidVessel.FindPartModulesImplementing<ModuleAsteroid>().First();
-                aSeed = asteroidM.seed;
+                aSeed = Math.Abs(asteroidM.seed);
                 aClass = asteroidClass(asteroidM.prefabBaseURL);
                 aType = asteroidSpectral(aSeed);
                 sciMult = asteroidValue(aClass);
@@ -67,7 +67,7 @@ namespace DMagic
             else if (asteroidGrappled())
             {
                 ModuleAsteroid asteroidM = FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleAsteroid>().First();
-                aSeed = asteroidM.seed;
+                aSeed = Math.Abs(asteroidM.seed);
                 aClass = asteroidClass(asteroidM.prefabBaseURL);
                 aType = asteroidSpectral(aSeed);
                 sciMult = asteroidValue(aClass) * 1.5f;
