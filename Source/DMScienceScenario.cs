@@ -48,7 +48,7 @@ namespace DMagic
                 {
                     if (pMod.moduleName == typeof(DMScienceScenario).Name) return (DMScienceScenario)pMod.moduleRef;
                 }
-                return (DMScienceScenario)g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.FLIGHT).moduleRef;
+                return (DMScienceScenario)g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.FLIGHT | GameScenes.TRACKSTATION | GameScenes.SPACECENTER).moduleRef;
             }
             set {}
         }
