@@ -62,6 +62,8 @@
     <Compile Include="DMScienceScenario.cs" />
     <Compile Include="DMScienceWatcher.cs" />
     <Compile Include="KSPAddonFixed.cs" />
+    <Compile Include="MagicDataTransmitter.cs" />
+    <Compile Include="MagicManager.cs" />
     <Compile Include="MagVar.cs">
       <SubType>Code</SubType>
     </Compile>
