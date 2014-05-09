@@ -36,20 +36,14 @@ namespace DMagic
 {
     internal class AsteroidScience
     {
-        internal CelestialBody AsteroidBody = null;
         internal string aClass = null;
         internal string aType = null;
         internal float sciMult = 0f;
         internal int aSeed = 0;
         private static Vessel asteroidVessel;
-        
-        //Let's make us some asteroid science
-        //First construct a new celestial body from an asteroid
 
         internal AsteroidScience()
         {
-            //Inherit values for the CelestialBody from an existing body, Eeloo in this case to minimize the risk of screwing something up   
-            AsteroidBody = FlightGlobals.fetch.bodies[16];
             asteroidVariables();
         }
 
@@ -134,7 +128,7 @@ namespace DMagic
         internal static bool asteroidGrappled()
         {
             if (FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleAsteroid>().Count > 0) return true;
-            else return false;
+            return false;
         }
 
         //Are we near the asteroid, cycle through existing vessels, only target asteroids within 2km
@@ -156,7 +150,6 @@ namespace DMagic
                             asteroidVessel = v;
                             return true;
                         }
-                        else continue;
                     }
                 }
             }
