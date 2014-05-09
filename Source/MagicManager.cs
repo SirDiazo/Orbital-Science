@@ -17,7 +17,6 @@ namespace DMagic
             GameEvents.onVesselChange.Add(OnVesselChange);
             GameEvents.onVesselWasModified.Add(OnVesselModified);
             GameEvents.onVesselDestroy.Add(OnVesselDestroyed);
-
             vessel = FlightGlobals.ActiveVessel;
             ScheduleRebuild();
         }
@@ -54,7 +53,6 @@ namespace DMagic
         public void OnVesselChange(Vessel v)
         {
             print("StorageCache.OnVesselChange");
-
             RemoveMagicTransmitter();
             vessel = v;
             ScheduleRebuild();
@@ -63,11 +61,7 @@ namespace DMagic
         public void OnVesselModified(Vessel v)
         {
             print("StorageCache.OnVesselModified");
-
-            if (vessel != v)
-            {
-                OnVesselChange(v);
-            }
+            if (vessel != v) OnVesselChange(v);
             else ScheduleRebuild();
         }
 
@@ -76,11 +70,6 @@ namespace DMagic
             if (vessel == v)
             {
                 print("StorageCache.OnVesselDestroyed");
-
-                //RemoveMagicTransmitter();
-                // temporary: seeing if attempting to remove transmitter while
-                // vessel is being destroyed is causing:
-                //      Destroying object multiple times. Don't use DestroyImmediate on the same object in OnDisable or OnDestroy."
                 magicTransmitter = null;
                 vessel = null;
             }
@@ -106,23 +95,18 @@ namespace DMagic
                         print(String.Format("RemoveMagicTransmitter: caught exception {0}", e));
                     }
                 }
-
             magicTransmitter = null;
         }
 
         private System.Collections.IEnumerator Rebuild()
         {
             IsBusy = true;
-
             print("StorageCache: Rebuilding ...");
-
             if (FlightGlobals.ActiveVessel != vessel)
             {
                 // this could be an indication that we're not monitoring
                 // the active vessel properly
                 print("StorageCache: Active vessel is not monitored vessel.");
-
-
                 RemoveMagicTransmitter();
                 vessel = FlightGlobals.ActiveVessel;
             }
@@ -145,13 +129,11 @@ namespace DMagic
             //          where vessels that couldn't normally dock do (some kind of plugin perhaps)
             //          so I've opted for a general solution here
             RemoveMagicTransmitter(false);
-
-
+            
             // count the number of "real" transmitters onboard
             List<IScienceDataTransmitter> transmitters = FlightGlobals.ActiveVessel.FindPartModulesImplementing<IScienceDataTransmitter>();
             transmitters.RemoveAll(tx => tx is MagicDataTransmitter);
-
-
+            
             if (transmitters.Count > 0)
             {
                 // as long as at least one transmitter is "real", the
@@ -166,7 +148,6 @@ namespace DMagic
             {
                 print(String.Format("Vessel {0} has no transmitters; no magic transmitter added", vessel.name));
             }
-
             IsBusy = false;
             print("Rebuilt StorageCache");
         }

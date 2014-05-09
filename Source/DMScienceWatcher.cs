@@ -9,6 +9,7 @@ namespace DMagic
     [KSPAddonFixed(KSPAddon.Startup.MainMenu, true, typeof(DMScienceWatcher))]
     internal class DMScienceWatcher: MonoBehaviour
     {
+        protected MagicDataTransmitter magicTransmitter;
 
         private void Start()
         {
@@ -24,7 +25,7 @@ namespace DMagic
 
         private void SciScenarioStarter()
         {
-            DMScienceScenario Scenario = DMScienceScenario.SciScenario;
+            //DMScienceScenario Scenario = DMScienceScenario.SciScenario;
         }
 
         private void RecoveryWatcher(Vessel v)
@@ -33,6 +34,27 @@ namespace DMagic
             foreach (IScienceDataContainer cont in v.FindPartModulesImplementing<IScienceDataContainer>())
             {
                 dataList.AddRange(cont.GetData());
+            }
+            foreach (ScienceData data in dataList)
+            {
+                foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
+                {
+                    if (data.subjectID == DMData.id)
+                    {
+                        ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
+                        DMModuleScienceAnimate.submitDMScience(DMData, sub);
+                    }
+                }
+            }
+        }
+
+        private void TransmissionWatcher(Vessel v)
+        {
+            List<ScienceData> dataList = new List<ScienceData>();
+            magicTransmitter = v.FindPartModulesImplementing<MagicDataTransmitter>().First();
+            if (magicTransmitter != null)
+            {
+                dataList = magicTransmitter.QueuedData;
             }
             foreach (ScienceData data in dataList)
             {
