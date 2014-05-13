@@ -6,16 +6,27 @@ using UnityEngine;
 
 namespace DMagic
 {
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
+    //[KSPAddon(KSPAddon.Startup.Flight, false)]
     internal class MagicManager : MonoBehaviour
     {
         protected MagicDataTransmitter magicTransmitter;
-        protected Vessel vessel; 
+        protected Vessel vessel;
+        bool something = false;
 
         public void Start()
         {
-
-            initialize();
+            vessel = FlightGlobals.ActiveVessel;
+            if (something)
+            {
+                GameEvents.onVesselChange.Add(OnVesselChange);
+                GameEvents.onVesselWasModified.Add(OnVesselModified);
+                GameEvents.onVesselDestroy.Add(OnVesselDestroyed);
+                ScheduleRebuild();
+            }
+            else
+            {
+                magicTransmitter = vessel.FindPartModulesImplementing<MagicDataTransmitter>().First();
+            }
         }
 
         public void OnDestroy()
@@ -23,26 +34,16 @@ namespace DMagic
             GameEvents.onVesselDestroy.Remove(OnVesselDestroyed);
             GameEvents.onVesselWasModified.Remove(OnVesselModified);
             GameEvents.onVesselChange.Remove(OnVesselChange);
-
             RemoveMagicTransmitter(false);
         }
 
-        public bool IsBusy
+        internal bool IsBusy
         {
             get;
             private set;
         }
 
-        private void initialize()
-        {
-            GameEvents.onVesselChange.Add(OnVesselChange);
-            GameEvents.onVesselWasModified.Add(OnVesselModified);
-            GameEvents.onVesselDestroy.Add(OnVesselDestroyed);
-            vessel = FlightGlobals.ActiveVessel;
-            ScheduleRebuild();
-        }
-
-        public void ScheduleRebuild()
+        private void ScheduleRebuild()
         {
             if (IsBusy)
             {
@@ -56,7 +57,7 @@ namespace DMagic
             StartCoroutine("Rebuild");
         }
 
-        public void OnVesselChange(Vessel v)
+        private void OnVesselChange(Vessel v)
         {
             print("MagicManager.OnVesselChange");
             RemoveMagicTransmitter();
@@ -64,14 +65,14 @@ namespace DMagic
             ScheduleRebuild();
         }
 
-        public void OnVesselModified(Vessel v)
+        private void OnVesselModified(Vessel v)
         {
             print("MagicManager.OnVesselModified");
             if (vessel != v) OnVesselChange(v);
             else ScheduleRebuild();
         }
 
-        public void OnVesselDestroyed(Vessel v)
+        private void OnVesselDestroyed(Vessel v)
         {
             if (vessel == v)
             {
@@ -156,6 +157,14 @@ namespace DMagic
             }
             IsBusy = false;
             print("Rebuilt MagicManager");
+        }
+
+        internal List<ScienceData> MagicScienceList()
+        {
+            List<ScienceData> dataList = new List<ScienceData>();
+            if (magicTransmitter != null)
+                dataList = magicTransmitter.QueuedData;
+            return dataList;
         }
 
     }
