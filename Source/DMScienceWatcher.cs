@@ -9,8 +9,8 @@ namespace DMagic
     [KSPAddonFixed(KSPAddon.Startup.MainMenu, true, typeof(DMScienceWatcher))]
     internal class DMScienceWatcher: MonoBehaviour
     {
-        protected MagicDataTransmitter magicTransmitter;
-        protected List<ScienceData> dataList = new List<ScienceData>();
+        protected Vessel activeVessel;
+        protected MagicManager manager;
 
         private void Start()
         {
@@ -38,6 +38,14 @@ namespace DMagic
             GameEvents.onFlightReady.Remove(SciScenarioStarter);
         }
 
+        private void Update()
+        {
+            if (FlightGlobals.ready && activeVessel.loaded)
+            {
+                TransmissionWatcher();
+            }
+        }
+
         private void SciScenarioStarter()
         {
             //DMScienceScenario Scenario = DMScienceScenario.SciScenario;
@@ -55,6 +63,9 @@ namespace DMagic
 
         private void vesselchange(Vessel v)
         {
+            activeVessel = FlightGlobals.ActiveVessel;
+            manager = null;
+            manager = gameObject.AddComponent<MagicManager>();
             EventDebug("vessel change");
         }
 
@@ -75,22 +86,22 @@ namespace DMagic
 
         private void RecoveryWatcher(Vessel v)
         {
-            dataList.Clear();
-            foreach (IScienceDataContainer cont in v.FindPartModulesImplementing<IScienceDataContainer>())
-            {
-                dataList.AddRange(cont.GetData());
-            }
-            foreach (ScienceData data in dataList)
-            {
-                foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
-                {
-                    if (data.subjectID == DMData.id)
-                    {
-                        ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
-                        DMModuleScienceAnimate.submitDMScience(DMData, sub);
-                    }
-                }
-            }
+            //dataList.Clear();
+            //foreach (IScienceDataContainer cont in v.FindPartModulesImplementing<IScienceDataContainer>())
+            //{
+            //    dataList.AddRange(cont.GetData());
+            //}
+            //foreach (ScienceData data in dataList)
+            //{
+            //    foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
+            //    {
+            //        if (data.subjectID == DMData.id)
+            //        {
+            //            ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
+            //            DMModuleScienceAnimate.submitDMScience(DMData, sub);
+            //        }
+            //    }
+            //}
         }
 
         private void ProtoRecoveryWatcher(ProtoVessel v)
@@ -120,27 +131,28 @@ namespace DMagic
             }
         }
 
-        private List<ScienceData> TransmissionList(Vessel v)
+        private List<ScienceData> TransmissionList()
         {
-            dataList.Clear();
-            magicTransmitter = v.FindPartModulesImplementing<MagicDataTransmitter>().First();
-            if (magicTransmitter != null)
-            {
-                dataList = magicTransmitter.QueuedData;
-            }
+            List<ScienceData> dataList = new List<ScienceData>();
+            if (manager != null)
+                dataList = manager.MagicScienceList();
             return dataList;
         }
 
-        private void TransmissionWatcher(Vessel v)
+        private void TransmissionWatcher()
         {
-            foreach (ScienceData data in dataList)
+            List<ScienceData> MTdataList = TransmissionList();
+            if (MTdataList.Count > 0)
             {
-                foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
+                foreach (ScienceData data in MTdataList)
                 {
-                    if (data.subjectID == DMData.id)
+                    foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
                     {
-                        ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
-                        DMModuleScienceAnimate.submitDMScience(DMData, sub);
+                        if (data.subjectID == DMData.id)
+                        {
+                            ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
+                            DMModuleScienceAnimate.submitDMScience(DMData, sub);
+                        }
                     }
                 }
             }
