@@ -14,11 +14,8 @@ namespace DMagic
 
         public void Start()
         {
-            GameEvents.onVesselChange.Add(OnVesselChange);
-            GameEvents.onVesselWasModified.Add(OnVesselModified);
-            GameEvents.onVesselDestroy.Add(OnVesselDestroyed);
-            vessel = FlightGlobals.ActiveVessel;
-            ScheduleRebuild();
+
+            initialize();
         }
 
         public void OnDestroy()
@@ -34,6 +31,15 @@ namespace DMagic
         {
             get;
             private set;
+        }
+
+        private void initialize()
+        {
+            GameEvents.onVesselChange.Add(OnVesselChange);
+            GameEvents.onVesselWasModified.Add(OnVesselModified);
+            GameEvents.onVesselDestroy.Add(OnVesselDestroyed);
+            vessel = FlightGlobals.ActiveVessel;
+            ScheduleRebuild();
         }
 
         public void ScheduleRebuild()
@@ -52,7 +58,7 @@ namespace DMagic
 
         public void OnVesselChange(Vessel v)
         {
-            print("StorageCache.OnVesselChange");
+            print("MagicManager.OnVesselChange");
             RemoveMagicTransmitter();
             vessel = v;
             ScheduleRebuild();
@@ -60,7 +66,7 @@ namespace DMagic
 
         public void OnVesselModified(Vessel v)
         {
-            print("StorageCache.OnVesselModified");
+            print("MagicManager.OnVesselModified");
             if (vessel != v) OnVesselChange(v);
             else ScheduleRebuild();
         }
@@ -69,7 +75,7 @@ namespace DMagic
         {
             if (vessel == v)
             {
-                print("StorageCache.OnVesselDestroyed");
+                print("MagicManager.OnVesselDestroyed");
                 magicTransmitter = null;
                 vessel = null;
             }
@@ -101,19 +107,19 @@ namespace DMagic
         private System.Collections.IEnumerator Rebuild()
         {
             IsBusy = true;
-            print("StorageCache: Rebuilding ...");
+            print("MagicManager: Rebuilding ...");
             if (FlightGlobals.ActiveVessel != vessel)
             {
                 // this could be an indication that we're not monitoring
                 // the active vessel properly
-                print("StorageCache: Active vessel is not monitored vessel.");
+                print("MagicManager: Active vessel is not monitored vessel.");
                 RemoveMagicTransmitter();
                 vessel = FlightGlobals.ActiveVessel;
             }
 
             while (!FlightGlobals.ready || !vessel.loaded)
             {
-                print("StorageCache.Rebuild - waiting");
+                print("MagicManager.Rebuild - waiting");
                 yield return new WaitForFixedUpdate();
             }
 
@@ -149,7 +155,7 @@ namespace DMagic
                 print(String.Format("Vessel {0} has no transmitters; no magic transmitter added", vessel.name));
             }
             IsBusy = false;
-            print("Rebuilt StorageCache");
+            print("Rebuilt MagicManager");
         }
 
     }
