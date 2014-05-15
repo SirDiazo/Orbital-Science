@@ -106,26 +106,31 @@ namespace DMagic
 
         private void ProtoRecoveryWatcher(ProtoVessel v)
         {
+            ////ConfigNode node = new ConfigNode();
+            ////ScienceData data = new ScienceData(node);
             EventDebug(v.vesselName);
             foreach (ProtoPartSnapshot snap in v.protoPartSnapshots)
             {
                 foreach (ProtoPartModuleSnapshot msnap in snap.modules)
                 {
+                    //foreach (ScienceData science in data.
                     foreach (ConfigNode dataNode in msnap.moduleValues.GetNodes("ScienceData"))
                     {
-                        string id = dataNode.GetValue("subjectID");
-                        print("Found science data with subject ID: " + id);
-                        ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(id);
-                        if (sub != null)
-                        {
+                        ScienceData data = new ScienceData(dataNode);
+                        //string id = dataNode.GetValue("subjectID");
+                        //print("Found science data with subject ID: " + id);
+                        //if (!string.IsNullOrEmpty(id))
+                        //{
                             foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
                             {
-                                if (DMData.id == sub.id)
+                                if (DMData.id == data.subjectID)
                                 {
-                                    DMModuleScienceAnimate.submitDMScience(DMData, sub);
+                                    data.dataAmount *= DMData.scival;
+                                    float subVal = data.dataAmount / (DMData.dataScale * DMData.basevalue);
+                                    DMScienceScenario.SciScenario.submitDMScience(DMData, subVal);
                                 }
                             }
-                        }
+                        //}
                     }
                 }
             }
@@ -150,8 +155,9 @@ namespace DMagic
                     {
                         if (data.subjectID == DMData.id)
                         {
-                            ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
-                            DMModuleScienceAnimate.submitDMScience(DMData, sub);
+                            data.dataAmount *= DMData.scival;
+                            float subVal = data.dataAmount / (DMData.dataScale * DMData.basevalue);
+                            DMScienceScenario.SciScenario.submitDMScience(DMData, subVal);
                         }
                     }
                 }
