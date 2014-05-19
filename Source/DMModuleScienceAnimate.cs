@@ -99,13 +99,10 @@ namespace DMagic
         private DMModuleScienceAnimate primaryModule = null;
         private AsteroidScience newAsteroid = null;
         protected DMScienceScenario Scenario = DMScienceScenario.SciScenario;
-        //private List<DMScienceScenario.DMScienceData> DMDataList = new List<DMScienceScenario.DMScienceData>();
+        protected CelestialBody mainBody;
 
-        //Record some default values for Eeloo here to prevent the asteroid science method from screwing them up
-        //private const string bodyDescription = "There’s been a considerable amount of controversy around the status of Eeloo as being a proper planet or a just “lump of ice going around the Sun”. The debate is still ongoing, since most academic summits held to address the issue have devolved into, on good days, petty name calling, and on worse ones, all-out brawls.";
-        //private const string bodyNameConst = "Eeloo";
-        //private const float bodyLandedValue = 15;
-        //private const float bodySpaceValue = 12;
+        //Record some default values for Eeloo here to prevent the asteroid science method from screwing them up 
+        private const string bodyNameConst = "Eeloo";
         
         List<ScienceData> scienceReportList = new List<ScienceData>();
 
@@ -118,14 +115,7 @@ namespace DMagic
             else
             {
                 setup();
-                //if (FlightGlobals.fetch.bodies[16].bodyName != "Eeloo") //Just to make sure nothing gets permanently screwed up
-                //{
-                //    mainBody = FlightGlobals.Bodies[16];
-                //    //mainBody.bodyDescription = bodyDescription;
-                //    mainBody.bodyName = bodyNameConst;
-                //    //mainBody.scienceValues.LandedDataValue = bodyLandedValue;
-                //    //mainBody.scienceValues.InSpaceLowDataValue = bodySpaceValue;
-                //}
+                if (FlightGlobals.fetch.bodies[16].bodyName != "Eeloo") FlightGlobals.Bodies[16].bodyName = bodyNameConst;
                 if (IsDeployed) primaryAnimator(1f, 1f, WrapMode.Default);
             }
         }
@@ -342,48 +332,9 @@ namespace DMagic
             ResetExperiment();
         }
 
-        //This ridiculous chunk of code seems to make the EVA data collection work properly
-        internal class EVAIScienceContainer : IScienceDataContainer
-        {
-            private bool rerunnable = true;
-            List<ScienceData> EVADataList = new List<ScienceData>();
-            internal EVAIScienceContainer(List<ScienceData> dataList, bool rerun)
-            {
-                foreach (ScienceData data in dataList)
-                {
-                    EVADataList.Add(data);
-                }
-                rerunnable = rerun;
-            }
-            public bool IsRerunnable()
-            {
-                return rerunnable;
-            }
-            public int GetScienceCount()
-            {
-                return EVADataList.Count;
-            }
-            public void ReviewData()
-            {
-            }
-            public void ReviewDataItem(ScienceData data)
-            {
-            }
-            public void DumpData(ScienceData data)
-            {
-            }
-            public ScienceData[] GetData()
-            {
-                return EVADataList.ToArray();
-            }
-        }
-
-        EVAIScienceContainer EVAIScience;
-
         new public void CollectDataExternalEvent()
         {   
             List<ModuleScienceContainer> EVACont = FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleScienceContainer>();
-            EVAIScience = new EVAIScienceContainer(scienceReportList, rerunnable);
             if (scienceReportList.Count > 0)
             {
                 if (EVACont.First().StoreData(new List<IScienceDataContainer> { this }, false)) DumpAllData(scienceReportList);
@@ -452,7 +403,7 @@ namespace DMagic
                     if (!string.IsNullOrEmpty(customFailMessage)) ScreenMessages.PostScreenMessage(customFailMessage, 5f, ScreenMessageStyle.UPPER_CENTER);
                 }
             }
-            else ReviewData();
+            else eventsCheck();
         }
 
         new public void DeployAction(KSPActionParam param)
@@ -490,9 +441,9 @@ namespace DMagic
             {
                 newAsteroid = new AsteroidScience();
                 asteroid = true;
-                //mainBody = newAsteroid.AsteroidBody;
-                biome = ""; // +newAsteroid.aSeed;
-                if (asteroidTypeDependent) biome = newAsteroid.aType; // +"_" + newAsteroid.aSeed;
+                mainBody = newAsteroid.body;
+                biome = "";
+                if (asteroidTypeDependent) biome = newAsteroid.aType;
             }
 
             ScienceData data = null;
@@ -507,6 +458,7 @@ namespace DMagic
             if (asteroid)
             {
                 registerDMScience(newAsteroid, exp, sub, vesselSituation, biome);
+                mainBody.bodyName = bodyNameConst;
                 asteroid = false;
             }
 
@@ -521,7 +473,7 @@ namespace DMagic
         {
             DMScienceScenario.DMScienceData DMData = null;
             //DMDataList.Clear();
-            string astID = exp.id + "@Asteroid" + expsit.ToString() + biome;
+            //string astID = sub.id;
             float astSciCap = exp.scienceCap * 43.5f;
             float astScience = 0f;
             float astSciVal = 1f;
@@ -532,7 +484,7 @@ namespace DMagic
             foreach (DMScienceScenario.DMScienceData DMScience in DMScienceScenario.recoveredScienceList)
             {
                 print("Checking for DM Data in list length: " + DMScienceScenario.recoveredScienceList.Count.ToString());
-                if (DMScience.id == astID)
+                if (DMScience.id == sub.id)
                 {
                     astScience = DMScience.science;
                     sub.scientificValue = DMScience.scival;
@@ -545,18 +497,18 @@ namespace DMagic
             }
             //float remainingSci = astSciCap - astScience;
             //sub.scientificValue = 1f;
-            sub.subjectValue = (sub.subjectValue / sub.subjectValue) * newAst.sciMult;
+            sub.subjectValue = newAst.sciMult;
             sub.science = astScience;
             sub.scienceCap = exp.scienceCap * sub.subjectValue;
             if (DMData == null) 
             {
-                DMScienceScenario.SciScenario.RecordNewScience(astID, sub.title, exp.baseValue, exp.dataScale, astSciVal, astScience, astSciCap, astExpNo);
+                DMScienceScenario.SciScenario.RecordNewScience(sub.id, sub.title, exp.baseValue, exp.dataScale, astSciVal, astScience, astSciCap, astExpNo);
                 //DMDataList.Add(DMData);
-            }           
-            //else 
+            }
+            //else
             //{
-            //    //DMScienceScenario.SciScenario.UpdateNewScience(DMData);
-            //    DMDataList.Add(DMData);
+            //    DMScienceScenario.SciScenario.UpdateNewScience(DMData);
+            //    //DMDataList.Add(DMData);
             //}
         }
         
@@ -765,7 +717,6 @@ namespace DMagic
                 //        DMDataList.Clear();
                 //    }
                 //}
-                //print("Dump Data");
             }
             eventsCheck();
         }
@@ -781,7 +732,6 @@ namespace DMagic
                 }
                 scienceReportList.Clear();
                 if (keepDeployedMode == 0) retractEvent();
-                //print("Dump All Data");
             }
             eventsCheck();
         }
@@ -803,7 +753,6 @@ namespace DMagic
                 //        DMDataList.Clear();
                 //    }
                 //}
-                //print("Dump Data Local");
             }
             eventsCheck();
         }
@@ -820,12 +769,10 @@ namespace DMagic
                 if (keepDeployedMode == 0) retractEvent();
             }
             eventsCheck();
-            //print("Discard data from page");
         }
 
         private void onKeepData(ScienceData data)
         {
-            //print("Store date from page");
         }
         
         private void onTransmitData(ScienceData data)
@@ -835,7 +782,6 @@ namespace DMagic
             {
                 tranList.OrderBy(ScienceUtil.GetTransmitterScore).First().TransmitData(new List<ScienceData> {data});
                 DumpData(data);
-                //print("Transmit data from page");
             }
             else ScreenMessages.PostScreenMessage("No transmitters available on this vessel.", 4f, ScreenMessageStyle.UPPER_LEFT);
         }
@@ -845,13 +791,11 @@ namespace DMagic
             List<ModuleScienceLab> labList = vessel.FindPartModulesImplementing<ModuleScienceLab>();
             if (checkLabOps() && scienceReportList.Count > 0) labList.OrderBy(ScienceUtil.GetLabScore).First().StartCoroutine(labList.First().ProcessData(data, new Callback<ScienceData>(onComplete)));
             else ScreenMessages.PostScreenMessage("No operational lab modules on this vessel. Cannot analyze data.", 4f, ScreenMessageStyle.UPPER_CENTER);
-            //print("Send data to lab");
         }
 
         private void onComplete(ScienceData data)
         {
             ReviewData();
-            //print("Data processed in lab");
         }
 
         //Maybe unnecessary, can be folded into a simpler method???
