@@ -99,7 +99,7 @@ namespace DMagic
         private DMModuleScienceAnimate primaryModule = null;
         private AsteroidScience newAsteroid = null;
         protected DMScienceScenario Scenario = DMScienceScenario.SciScenario;
-        protected CelestialBody mainBody;
+        //protected CelestialBody mainBody;
 
         //Record some default values for Eeloo here to prevent the asteroid science method from screwing them up 
         private const string bodyNameConst = "Eeloo";
@@ -454,15 +454,20 @@ namespace DMagic
             print("Subject: Sci: " + sub.science.ToString() + " Cap: " + sub.scienceCap.ToString() + " SciV: " + sub.scientificValue.ToString() + " SubV: " + sub.subjectValue.ToString());
             print("Subject: Title: " + sub.title + " ID: " + sub.id);
             sub.title = exp.experimentTitle + situationCleanup(vesselSituation, biome);
-            
+
             if (asteroid)
             {
                 registerDMScience(newAsteroid, exp, sub, vesselSituation, biome);
                 mainBody.bodyName = bodyNameConst;
                 asteroid = false;
             }
+            else
+            {
+                sub.subjectValue = fixSubjectValue(vesselSituation, mainBody);
+                sub.scienceCap = exp.baseValue * sub.subjectValue;
+            }
 
-            data = new ScienceData(exp.baseValue * sub.dataScale, xmitDataScalar, xmitDataScalar / 2, sub.id, sub.title);
+            data = new ScienceData(exp.baseValue * sub.dataScale, xmitDataScalar, 0.5f, sub.id, sub.title);
             print("Data: ID Old: " + data.subjectID);
             print("Data: Transmission: " + data.transmitValue.ToString());
             print("Data: Title: " + data.title + " ID: " + data.subjectID);
@@ -529,6 +534,18 @@ namespace DMagic
             //    }
             //}
         //}
+
+        private float fixSubjectValue(ExperimentSituations s, CelestialBody b)
+        {
+            float subV = 1f;
+            if (s == ExperimentSituations.SrfLanded) subV = b.scienceValues.LandedDataValue;
+            else if (s == ExperimentSituations.SrfSplashed) subV = b.scienceValues.SplashedDataValue;
+            else if (s == ExperimentSituations.FlyingLow) subV = b.scienceValues.FlyingLowDataValue;
+            else if (s == ExperimentSituations.FlyingHigh) subV = b.scienceValues.FlyingHighDataValue;
+            else if (s == ExperimentSituations.InSpaceLow) subV = b.scienceValues.InSpaceLowDataValue;
+            else if (s == ExperimentSituations.InSpaceHigh) subV = b.scienceValues.InSpaceHighDataValue;
+            return subV;
+        }
         
         private string getBiome(ExperimentSituations s)
         {
