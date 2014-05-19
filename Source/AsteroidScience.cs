@@ -41,9 +41,11 @@ namespace DMagic
         internal float sciMult = 0f;
         internal int aSeed = 0;
         private static Vessel asteroidVessel;
+        internal CelestialBody body;
 
         internal AsteroidScience()
         {
+            body = FlightGlobals.Bodies[16];
             asteroidVariables();
         }
 
@@ -130,7 +132,7 @@ namespace DMagic
             if (FlightGlobals.ActiveVessel.FindPartModulesImplementing<ModuleAsteroid>().Count > 0) return true;
             return false;
         }
-
+        
         //Are we near the asteroid, cycle through existing vessels, only target asteroids within 2km
         internal static bool asteroidNear()
         {
