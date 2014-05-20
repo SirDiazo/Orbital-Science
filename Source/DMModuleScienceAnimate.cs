@@ -463,8 +463,8 @@ namespace DMagic
             }
             else
             {
-                sub.subjectValue = fixSubjectValue(vesselSituation, mainBody);
-                sub.scienceCap = exp.baseValue * sub.subjectValue;
+                sub.subjectValue = fixSubjectValue(vesselSituation, mainBody, sub.subjectValue);
+                sub.scienceCap = exp.scienceCap * sub.subjectValue;
             }
 
             data = new ScienceData(exp.baseValue * sub.dataScale, xmitDataScalar, 0.5f, sub.id, sub.title);
@@ -535,9 +535,9 @@ namespace DMagic
             //}
         //}
 
-        private float fixSubjectValue(ExperimentSituations s, CelestialBody b)
+        private float fixSubjectValue(ExperimentSituations s, CelestialBody b, float f)
         {
-            float subV = 1f;
+            float subV = f;
             if (s == ExperimentSituations.SrfLanded) subV = b.scienceValues.LandedDataValue;
             else if (s == ExperimentSituations.SrfSplashed) subV = b.scienceValues.SplashedDataValue;
             else if (s == ExperimentSituations.FlyingLow) subV = b.scienceValues.FlyingLowDataValue;
