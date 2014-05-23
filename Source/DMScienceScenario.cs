@@ -125,7 +125,7 @@ namespace DMagic
         {
             foreach (DMScienceData DMSci in recoveredScienceList)
             {
-                if (DMSci.id == DMData.id)
+                if (DMSci.title == DMData.title)
                 {
                     DMSci.science = DMData.science;
                     DMSci.expNo = DMData.expNo;
@@ -136,8 +136,7 @@ namespace DMagic
 
         internal void submitDMScience(DMScienceData DMData, float subVal)
         {
-            if (DMData.expNo < 3) DMData.scival -= 0.05f * (6 / DMData.expNo);
-            else DMData.scival -= 0.05f;
+            DMData.scival = ScienceValue(DMData.expNo, DMData.scival);
             DMData.science += DMData.basevalue * subVal * DMData.scival;
             DMData.expNo++;
             UpdateNewScience(DMData);
@@ -146,6 +145,14 @@ namespace DMagic
         internal void RemoveDMScience(DMScienceData DMdata)
         {
             recoveredScienceList.Remove(DMdata);
+        }
+
+        internal float ScienceValue (int i, float f)
+        {
+            float sciVal = 1f;
+            if (i < 3) sciVal = f - 0.05f * (6 / i);
+            else sciVal = f - 0.05f;
+            return sciVal;
         }
 
     }
