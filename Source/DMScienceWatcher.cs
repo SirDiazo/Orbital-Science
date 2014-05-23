@@ -14,7 +14,6 @@ namespace DMagic
 
         private void Start()
         {
-            GameEvents.OnVesselRecoveryRequested.Add(RecoveryWatcher);
             GameEvents.onVesselRecovered.Add(ProtoRecoveryWatcher);
             GameEvents.onFlightReady.Add(SciScenarioStarter);
 
@@ -34,7 +33,7 @@ namespace DMagic
 
         private void OnDestroy()
         {
-            GameEvents.OnVesselRecoveryRequested.Remove(RecoveryWatcher);
+            GameEvents.onVesselRecovered.Remove(ProtoRecoveryWatcher);
             GameEvents.onFlightReady.Remove(SciScenarioStarter);
         }
 
@@ -42,7 +41,10 @@ namespace DMagic
         {
             if (FlightGlobals.ready && activeVessel.loaded)
             {
-                TransmissionWatcher();
+                if (TransmissionList().Count > 0)
+                {
+                    TransmissionWatcher();
+                }
             }
         }
 
@@ -65,6 +67,8 @@ namespace DMagic
         {
             activeVessel = FlightGlobals.ActiveVessel;
             manager = null;
+            var managerObj = new GameObject();
+            managerObj.AddComponent<MagicManager>();
             manager = gameObject.AddComponent<MagicManager>();
             EventDebug("vessel change");
         }
@@ -84,30 +88,8 @@ namespace DMagic
             print("GameEvent " + gevent + " triggered");
         }
 
-        private void RecoveryWatcher(Vessel v)
-        {
-            //dataList.Clear();
-            //foreach (IScienceDataContainer cont in v.FindPartModulesImplementing<IScienceDataContainer>())
-            //{
-            //    dataList.AddRange(cont.GetData());
-            //}
-            //foreach (ScienceData data in dataList)
-            //{
-            //    foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
-            //    {
-            //        if (data.subjectID == DMData.id)
-            //        {
-            //            ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
-            //            DMModuleScienceAnimate.submitDMScience(DMData, sub);
-            //        }
-            //    }
-            //}
-        }
-
         private void ProtoRecoveryWatcher(ProtoVessel v)
         {
-            ////ConfigNode node = new ConfigNode();
-            ////ScienceData data = new ScienceData(node);
             EventDebug(v.vesselName);
             foreach (ProtoPartSnapshot snap in v.protoPartSnapshots)
             {
@@ -117,20 +99,15 @@ namespace DMagic
                     foreach (ConfigNode dataNode in msnap.moduleValues.GetNodes("ScienceData"))
                     {
                         ScienceData data = new ScienceData(dataNode);
-                        //string id = dataNode.GetValue("subjectID");
-                        //print("Found science data with subject ID: " + id);
-                        //if (!string.IsNullOrEmpty(id))
-                        //{
                             foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
                             {
-                                if (DMData.id == data.subjectID)
+                                if (DMData.title == data.title)
                                 {
-                                    data.dataAmount *= DMData.scival;
-                                    float subVal = data.dataAmount / (DMData.dataScale * DMData.basevalue);
+                                    float subVal = SciSub (data.subjectID);
+                                    data.dataAmount = subVal * DMData.basevalue * DMData.scival * DMData.dataScale;
                                     DMScienceScenario.SciScenario.submitDMScience(DMData, subVal);
                                 }
                             }
-                        //}
                     }
                 }
             }
@@ -153,14 +130,54 @@ namespace DMagic
                 {
                     foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
                     {
-                        if (data.subjectID == DMData.id)
+                        if (data.title == DMData.title)
                         {
-                            data.dataAmount *= DMData.scival;
-                            float subVal = data.dataAmount / (DMData.dataScale * DMData.basevalue);
+                            float subVal = SciSub(data.subjectID);
+                            data.dataAmount = subVal * DMData.basevalue * DMData.scival * DMData.dataScale;
                             DMScienceScenario.SciScenario.submitDMScience(DMData, subVal);
+                            updateRemainingData();
                         }
                     }
                 }
+            }
+        }
+
+        private void updateRemainingData ()
+        {
+            List<ScienceData> dataList = new List<ScienceData>();
+            foreach (IScienceDataContainer container in FlightGlobals.ActiveVessel.FindPartModulesImplementing<IScienceDataContainer>())
+            {
+                dataList.AddRange(container.GetData());
+            }
+            foreach (ScienceData data in dataList)
+            {
+                foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
+                {
+                    if (DMData.title == data.title)
+                    {
+                        float subV = SciSub(data.subjectID);
+                        data.dataAmount = DMData.basevalue * DMData.dataScale * DMData.scival * subV;
+                    }
+                }
+            }
+        }
+
+        private float SciSub (string s)
+        {
+            switch (s[s.Length - 1])
+            {
+                case 'A':
+                    return 1.5f;
+                case 'B':
+                    return 3f;
+                case 'C':
+                    return 5f;
+                case 'D':
+                    return 8f;
+                case 'E':
+                    return 10f;
+                default:
+                    return 30f;
             }
         }
 
