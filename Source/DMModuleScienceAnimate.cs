@@ -434,7 +434,8 @@ namespace DMagic
             ExperimentSituations vesselSituation = getSituation();
             string biome = getBiome(vesselSituation);
             CelestialBody mainBody = vessel.mainBody;
-            bool asteroid = false;            
+            bool asteroid = false;           
+            string aClass;
             
             //Check for asteroids and alter the biome and celestialbody values as necessary
             if (asteroidReports && AsteroidScience.asteroidGrappled() || asteroidReports && AsteroidScience.asteroidNear())
@@ -442,6 +443,7 @@ namespace DMagic
                 newAsteroid = new AsteroidScience();
                 asteroid = true;
                 mainBody = newAsteroid.body;
+                aClass = newAsteroid.aClass;
                 biome = "";
                 if (asteroidTypeDependent) biome = newAsteroid.aType;
             }
@@ -474,11 +476,12 @@ namespace DMagic
             return data;
         }
 
-        private void registerDMScience(AsteroidScience newAst, ScienceExperiment exp, ScienceSubject sub, ExperimentSituations expsit, string biome)
+        private void registerDMScience(AsteroidScience newAst, ScienceExperiment exp, ScienceSubject sub, ExperimentSituations expsit, string s)
         {
             DMScienceScenario.DMScienceData DMData = null;
             //DMDataList.Clear();
             //string astID = sub.id;
+            string astID = exp.id + "@Asteroid" + expsit.ToString() + s;
             float astSciCap = exp.scienceCap * 43.5f;
             float astScience = 0f;
             float astSciVal = 1f;
@@ -489,7 +492,7 @@ namespace DMagic
             foreach (DMScienceScenario.DMScienceData DMScience in DMScienceScenario.recoveredScienceList)
             {
                 print("Checking for DM Data in list length: " + DMScienceScenario.recoveredScienceList.Count.ToString());
-                if (DMScience.id == sub.id)
+                if (DMScience.title == sub.title)
                 {
                     astScience = DMScience.science;
                     sub.scientificValue = DMScience.scival;
@@ -510,30 +513,7 @@ namespace DMagic
                 DMScienceScenario.SciScenario.RecordNewScience(sub.id, sub.title, exp.baseValue, exp.dataScale, astSciVal, astScience, astSciCap, astExpNo);
                 //DMDataList.Add(DMData);
             }
-            //else
-            //{
-            //    DMScienceScenario.SciScenario.UpdateNewScience(DMData);
-            //    //DMDataList.Add(DMData);
-            //}
-        }
-        
-        //internal static void submitDMScience(DMScienceScenario.DMScienceData DMData, ScienceSubject sub)
-        //{
-        //    //if (DMData.expNo < 3) DMData.scival -= 0.05f * (6 / DMData.expNo);
-            //else DMData.scival -= 0.05f;
-            ////float scv = DMData.scival - DMData.scival * (0.5f / DMData.expNo);
-            //DMData.science += DMData.basevalue * sub.subjectValue * DMData.scival;
-            ////float sci = DMData.science + DMData.basevalue * sub.subjectValue * scv;
-            //DMData.expNo++;
-            ////int expNo = DMData.expNo + 1;
-            //foreach (DMScienceScenario.DMScienceData DMScience in DMScienceScenario.recoveredScienceList)
-            //{
-            //    if (DMScience.id == DMData.id)
-            //    {
-            //        DMScienceScenario.SciScenario.UpdateNewScience(DMData.id);
-            //    }
-            //}
-        //}
+        } 
 
         private float fixSubjectValue(ExperimentSituations s, CelestialBody b, float f)
         {
