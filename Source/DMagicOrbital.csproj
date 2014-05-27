@@ -45,7 +45,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsteroidScience.cs" />
+    <Compile Include="DMAsteroidScience.cs" />
     <Compile Include="DMAnomalyScanner.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -58,10 +58,11 @@
     </Compile>
     <Compile Include="DMModuleScienceAnimate.cs" />
     <Compile Include="DMScienceScenario.cs" />
-    <Compile Include="DMScienceWatcher.cs" />
-    <Compile Include="KSPAddonFixed.cs" />
+    <Compile Include="DMRecoveryWatcher.cs" />
+    <Compile Include="DMTransmissionWatcher.cs" />
+    <Compile Include="KSPAddonImproved.cs" />
     <Compile Include="MagicDataTransmitter.cs" />
-    <Compile Include="MagicManager.cs" />
+    <Compile Include="DMMagicManager.cs" />
     <Compile Include="MagVar.cs">
       <SubType>Code</SubType>
     </Compile>
