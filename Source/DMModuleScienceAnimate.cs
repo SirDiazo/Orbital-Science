@@ -97,7 +97,7 @@ namespace DMagic
         private List<DMEnviroSensor> enviroList = new List<DMEnviroSensor>();
         private List<DMModuleScienceAnimate> primaryList = new List<DMModuleScienceAnimate>();
         private DMModuleScienceAnimate primaryModule = null;
-        private AsteroidScience newAsteroid = null;
+        private DMAsteroidScience newAsteroid = null;
         protected DMScienceScenario Scenario = DMScienceScenario.SciScenario;
         //protected CelestialBody mainBody;
 
@@ -438,9 +438,9 @@ namespace DMagic
             string aClass;
             
             //Check for asteroids and alter the biome and celestialbody values as necessary
-            if (asteroidReports && AsteroidScience.asteroidGrappled() || asteroidReports && AsteroidScience.asteroidNear())
+            if (asteroidReports && DMAsteroidScience.asteroidGrappled() || asteroidReports && DMAsteroidScience.asteroidNear())
             {
-                newAsteroid = new AsteroidScience();
+                newAsteroid = new DMAsteroidScience();
                 asteroid = true;
                 mainBody = newAsteroid.body;
                 aClass = newAsteroid.aClass;
@@ -476,7 +476,7 @@ namespace DMagic
             return data;
         }
 
-        private void registerDMScience(AsteroidScience newAst, ScienceExperiment exp, ScienceSubject sub, ExperimentSituations expsit, string s)
+        private void registerDMScience(DMAsteroidScience newAst, ScienceExperiment exp, ScienceSubject sub, ExperimentSituations expsit, string s)
         {
             DMScienceScenario.DMScienceData DMData = null;
             //DMDataList.Clear();
@@ -555,8 +555,8 @@ namespace DMagic
         private ExperimentSituations getSituation()
         {
             //Check for asteroids, return values that should sync with existing parts
-            if (asteroidReports && AsteroidScience.asteroidGrappled()) return ExperimentSituations.SrfLanded;
-            if (asteroidReports && AsteroidScience.asteroidNear()) return ExperimentSituations.InSpaceLow;
+            if (asteroidReports && DMAsteroidScience.asteroidGrappled()) return ExperimentSituations.SrfLanded;
+            if (asteroidReports && DMAsteroidScience.asteroidNear()) return ExperimentSituations.InSpaceLow;
             switch (vessel.situation)
             {
                 case Vessel.Situations.LANDED:
@@ -583,8 +583,8 @@ namespace DMagic
         private string situationCleanup(ExperimentSituations expSit, string b)
         {
             //Add some asteroid specefic results
-            if (asteroidReports && AsteroidScience.asteroidGrappled()) return " from the surface of a " + b + " asteroid";
-            if (asteroidReports && AsteroidScience.asteroidNear()) return " while in space near a " + b + " asteroid";
+            if (asteroidReports && DMAsteroidScience.asteroidGrappled()) return " from the surface of a " + b + " asteroid";
+            if (asteroidReports && DMAsteroidScience.asteroidNear()) return " while in space near a " + b + " asteroid";
             if (vessel.landedAt != "") return " from " + b;
             if (b == "")
             {
