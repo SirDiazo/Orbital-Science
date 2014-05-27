@@ -38,25 +38,62 @@ namespace DMagic
 {
     public class DMScienceScenario: ScenarioModule
     {
+        
 
         public static DMScienceScenario SciScenario
         {
             get
             {
                 Game g = HighLogic.CurrentGame;
-                foreach (ProtoScenarioModule pMod in g.scenarios)
+                if (g == null)
                 {
-                    if (pMod.moduleName == typeof(DMScienceScenario).Name) return (DMScienceScenario)pMod.moduleRef;
+                    return null;
                 }
-                return (DMScienceScenario)g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.FLIGHT | GameScenes.TRACKSTATION | GameScenes.SPACECENTER).moduleRef;
+                if (!g.scenarios.Any(a => a.moduleName == typeof(DMScienceScenario).Name))
+                {
+                    var p = g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.FLIGHT, GameScenes.SPACECENTER, GameScenes.TRACKSTATION);
+                    if (p.targetScenes.Contains(HighLogic.LoadedScene))
+                    {
+                        p.Load(ScenarioRunner.fetch);
+                    }
+                }
+                return g.scenarios.Select(b => b.moduleRef).OfType<DMScienceScenario>().SingleOrDefault();
+
+                //foreach (ProtoScenarioModule pMod in g.scenarios)
+                //{
+                //    print("[DM] Scenario Found");
+                //    if (pMod.moduleName == typeof(DMScienceScenario).Name) return (DMScienceScenario)pMod.moduleRef;
+                //}
+                //if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                //{
+                //    print("[DM] Loaded Scene is Flight");
+                //    return (DMScienceScenario)g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.FLIGHT).moduleRef;
+                //}
+                //else if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+                //{
+                //    print("[DM] Loaded Scene is SpaceCenter");
+                //    return (DMScienceScenario)g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.SPACECENTER).moduleRef;
+                //}
+                //else if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+                //{
+                //    print("[DM] Loaded Scene is TrackingStation");
+                //    return (DMScienceScenario)g.AddProtoScenarioModule(typeof(DMScienceScenario), GameScenes.TRACKSTATION).moduleRef;
+                //}
+                //else
+                //{
+                //    print("[DM] Scenario Not Found");
+                //    return null;
+                //}
             }
-            set {}
+            private set {}
         }
+        internal static bool Recovered = false;
 
         internal static List<DMScienceData> recoveredScienceList = new List<DMScienceData>();
 
         public override void OnSave(ConfigNode node)
         {
+            print("[DM] Saving Science Scenario");
             ConfigNode results_node = new ConfigNode("Asteroid Science");
             foreach (DMScienceData data in recoveredScienceList)
             {
@@ -77,6 +114,7 @@ namespace DMagic
 
         public override void OnLoad(ConfigNode node)
         {
+            print("[DM] Loading Science Scenario");
             recoveredScienceList.Clear();
             ConfigNode results_node = node.GetNode("Asteroid Science");
             if (results_node != null)
@@ -121,7 +159,7 @@ namespace DMagic
             //return DMData;
         }
 
-        internal void UpdateNewScience(DMScienceData DMData)
+        private void UpdateNewScience(DMScienceData DMData)
         {
             foreach (DMScienceData DMSci in recoveredScienceList)
             {
@@ -147,12 +185,54 @@ namespace DMagic
             recoveredScienceList.Remove(DMdata);
         }
 
-        internal float ScienceValue (int i, float f)
+        private float ScienceValue (int i, float f)
         {
             float sciVal = 1f;
             if (i < 3) sciVal = f - 0.05f * (6 / i);
             else sciVal = f - 0.05f;
             return sciVal;
+        }
+
+        internal void updateRemainingData ()
+        {
+            print("[DM] Updating Existing Data");
+            List<ScienceData> dataList = new List<ScienceData>();
+            foreach (IScienceDataContainer container in FlightGlobals.ActiveVessel.FindPartModulesImplementing<IScienceDataContainer>())
+            {
+                dataList.AddRange(container.GetData());
+            }
+            foreach (ScienceData data in dataList)
+            {
+                foreach (DMScienceScenario.DMScienceData DMData in DMScienceScenario.recoveredScienceList)
+                {
+                    if (DMData.title == data.title)
+                    {
+                        //float subV = SciSub(data.subjectID);
+                        ScienceSubject sub = ResearchAndDevelopment.GetSubjectByID(data.subjectID);
+                        sub.scientificValue = DMData.scival;
+                        //data.dataAmount = DMData.basevalue * DMData.dataScale * DMData.scival * subV;
+                    }
+                }
+            }
+        }
+
+        internal float SciSub (string s)
+        {
+            switch (s[s.Length - 1])
+            {
+                case 'A':
+                    return 1.5f;
+                case 'B':
+                    return 3f;
+                case 'C':
+                    return 5f;
+                case 'D':
+                    return 8f;
+                case 'E':
+                    return 10f;
+                default:
+                    return 30f;
+            }
         }
 
     }
